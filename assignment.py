@@ -1,5 +1,5 @@
 from gmail import Gmail
-from db import Database
+from Database import SQLiteDatabase
 from file_handler import JSONFileHandler
 from datetime import datetime, timedelta, timezone
 
@@ -202,7 +202,7 @@ class Assignment:
         
 if __name__ == "__main__":
     gmail = Gmail()
-    db = Database()
+    db = SQLiteDatabase()
     file_handler = JSONFileHandler('rules1.json')
     
     assignment = Assignment(gmail, db, file_handler)

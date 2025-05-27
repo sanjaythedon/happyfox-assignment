@@ -1,9 +1,10 @@
 import sqlite3
 import os
 from pathlib import Path
+from Database.database import Database
 
 
-class Database:
+class SQLiteDatabase(Database):
     def __init__(self, db_name="app.db", db_path=None):
         """
         Initialize the Database class.
@@ -136,7 +137,7 @@ class Database:
 
 
 if __name__ == "__main__":
-    db = Database()
+    db = SQLiteDatabase()
     
     columns = {
         "id": "INTEGER PRIMARY KEY",
