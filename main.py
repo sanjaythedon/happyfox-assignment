@@ -26,8 +26,15 @@ def main():
     file_handler = JSONFileHandler('rules1.json')
     
     rule_operations = RuleOperations(gmail, db, file_handler)
+    print("Step 1: Fetching and storing emails from Gmail...")
     rule_operations.fetch_and_store_emails(max_results=100)
-    rule_operations.run_operations()
+    print("Successfully fetched and stored emails in the database")
+
+    
+    print("\nStep 2: Applying rules to emails...")
+    rules = rule_operations.run_operations()
+    print(f"Successfully applied {len(rules)} rule(s) to matching emails")
+
 
 if __name__ == "__main__":
     main()

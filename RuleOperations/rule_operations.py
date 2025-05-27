@@ -33,18 +33,22 @@ class RuleOperations:
             List of rules that were successfully run
         """
         try:
+            print("Loading rules from file...")
             rules = self.file_handler.read()
             print(f"Successfully loaded {len(rules)} rule(s)")
             
             for rule in rules:
                 rule_name = rule.get('rule_name', 'Unnamed Rule')
+                print(f"\nProcessing rule: '{rule_name}'")
                 
+                print("Parsing rule conditions to SQL...")
                 condition_str, condition_values = RuleParser.create_sql_query(rule)
                 
                 if condition_str:
                     print(f"Rule '{rule_name}' SQL condition: {condition_str}")
                     print(f"Condition values: {condition_values}")
                     
+                    print("Querying database for matching emails...")
                     matching_emails = self.db.read("emails", condition=condition_str, condition_values=condition_values)
                     print(f"Found {len(matching_emails)} emails matching rule '{rule_name}'")
                     
@@ -52,24 +56,32 @@ class RuleOperations:
                     if operations and matching_emails:
                         print(f"Applying {len(operations)} operations to {len(matching_emails)} emails")
                         
+                        print("Bundling email operations...")
                         email_operations = EmailOperationsBundler.bundle_email_operations(operations)
                         
-                        for email in matching_emails:
+                        for i, email in enumerate(matching_emails):
                             email_id = email.get('unique_id')
                             if not email_id:
                                 print(f"Warning: Email missing unique ID, skipping operations")
                                 continue
                                 
-                            print(f"Processing operations for email: {email.get('Subject', 'No Subject')}")
+                            print(f"Processing operations for email {i+1}/{len(matching_emails)}: {email.get('Subject', 'No Subject')}")
                             
-                            for operation in email_operations:
-                                operation.apply(email_id, self.gmail)
+                            for j, operation in enumerate(email_operations):
+                                print(f"Applying operation {j+1}/{len(email_operations)}...")
+                                result = operation.apply(email_id, self.gmail)
+                                print(f"Operation {'succeeded' if result else 'failed'}")
                     else:
                         print(f"No operations to apply or no matching emails for rule '{rule_name}'")
+                else:
+                    print(f"Warning: Could not create SQL condition for rule '{rule_name}'")
             
+            print("\nRule processing completed successfully")
             return rules
         except Exception as e:
             print(f"Error in run_operations: {e}")
+            import traceback
+            print(f"Stack trace: {traceback.format_exc()}")
             return None
 
     def fetch_and_store_emails(self, max_results: int = 100):
@@ -83,6 +95,7 @@ class RuleOperations:
             True if emails were successfully fetched and stored, False otherwise
         """
         try:
+            print("Creating emails table if it doesn't exist...")
             columns = {
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 "unique_id": "TEXT UNIQUE",
@@ -94,19 +107,21 @@ class RuleOperations:
             
             self.db.create_table("emails", columns)
             
+            print(f"Fetching up to {max_results} emails from Gmail...")
             emails = self.gmail.fetch_emails(max_results=max_results)
             if not emails:
-                print("No emails fetched")
+                print("No emails fetched from Gmail")
                 return False
                 
-            for email in emails:
+            print(f"Processing {len(emails)} emails for storage...")
+            for i, email in enumerate(emails):
                 try:
-                    print(email)
+                    print(f"Processing email {i+1}/{len(emails)}: {email.get('Subject', 'No Subject')}")
                     date_str = email['Date Received'].split('(')[0].strip()
                     parsed_date = datetime.strptime(date_str, '%a, %d %b %Y %H:%M:%S %z')
                     formatted_date = parsed_date.strftime('%Y-%m-%d %H:%M:%S')
                 except ValueError:
-                    print(f"Could not parse date: {email['Date Received']}")
+                    print(f"Could not parse date format: {email['Date Received']}")
                     formatted_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 
                 email_data = {
@@ -118,12 +133,14 @@ class RuleOperations:
                 }
                 
                 self.db.insert("emails", email_data)
-                print(f"Stored email: {email['Subject']}")
+                print(f"Successfully stored email: {email['Subject'][:50]}{'...' if len(email['Subject']) > 50 else ''}")
             
+            print(f"Email fetch and store operation completed successfully. {len(emails)} emails stored.")
             return True
             
         except Exception as e:
             print(f"Error in fetch_and_store_emails: {e}")
+            print(f"Stack trace: {traceback.format_exc()}")
             return False
     
         
