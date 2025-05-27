@@ -97,8 +97,55 @@ class Assignment:
                     matching_emails = self.db.read("emails", condition=condition_str, condition_values=condition_values)
                     print(f"Found {len(matching_emails)} emails matching rule '{rule_name}'")
                     
-                    # Here you would apply operations from rule['operations']
-                    # ...
+                    # Process operations from rule['operations']
+                    operations = rule.get('operations', [])
+                    if operations and matching_emails:
+                        print(f"Applying {len(operations)} operations to {len(matching_emails)} emails")
+                        
+                        for email in matching_emails:
+                            email_id = email.get('unique_id')
+                            if not email_id:
+                                print(f"Warning: Email missing unique ID, skipping operations")
+                                continue
+                                
+                            print(f"Processing operations for email: {email.get('Subject', 'No Subject')}")
+                            
+                            # Initialize operation variables
+                            mark_as_read = None
+                            move_to_label = None
+                            
+                            # Process each operation
+                            for operation in operations:
+                                action = operation.get('action')
+                                
+                                if action == 'Mark as Read':
+                                    mark_as_read = True
+                                    print(f"  - Will mark as read")
+                                    
+                                elif action == 'Move message':
+                                    destination = operation.get('destination').upper()
+                                    if destination:
+                                        move_to_label = destination
+                                        print(f"  - Will move to: {destination}")
+                            
+                            # Apply the operations using Gmail API
+                            if mark_as_read is not None or move_to_label is not None:
+                                try:
+                                    result = self.gmail.update_email(
+                                        message_id=email_id,
+                                        mark_as_read=mark_as_read if mark_as_read is not None else False,
+                                        move_to_label=move_to_label
+                                    )
+                                    
+                                    if result:
+                                        print(f"Successfully applied operations to email: {email.get('Subject', 'No Subject')}")
+                                    else:
+                                        print(f"Failed to apply operations to email: {email.get('Subject', 'No Subject')}")
+                                except Exception as e:
+                                    print(f"Error applying operations to email: {e}")
+                    else:
+                        print(f"No operations to apply or no matching emails for rule '{rule_name}'")
+                    
             
             return rules
         except Exception as e:
