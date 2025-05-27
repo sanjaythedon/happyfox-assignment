@@ -38,17 +38,16 @@ class EmailRule(BaseModel):
     
 
 
-def load_rules_from_json(file_path: str) -> List[EmailRule]:
-    """Load rules from a JSON file."""
-    import json
-    with open(file_path, 'r') as f:
-        data = json.load(f)
-    
-    email_rules = [EmailRule.model_validate(rule) for rule in data]
-    
-    return email_rules
-
-
 if __name__ == "__main__":
+    def load_rules_from_json(file_path: str) -> List[EmailRule]:
+        """Load rules from a JSON file."""
+        import json
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        
+        email_rules = [EmailRule.model_validate(rule) for rule in data]
+    
+        return email_rules      
+    
     rules = load_rules_from_json("rules.json")
     print(rules)

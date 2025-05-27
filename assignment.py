@@ -24,7 +24,6 @@ class Assignment:
                 rule_collection_predicate = rule.get('rule_collection_predicate', 'all')
                 rule_conditions = rule.get('rules', [])
                 
-                # Build SQL query based on rule conditions
                 sql_conditions = []
                 condition_values = []
                 
