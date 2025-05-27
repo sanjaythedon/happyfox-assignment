@@ -1,4 +1,5 @@
-from Gmail import Gmail
+import os
+from Gmail import GmailService, GmailAuthenticator
 from Database import SQLiteDatabase
 from FileHandler import JSONFileHandler
 from datetime import datetime, timedelta, timezone
@@ -201,7 +202,11 @@ class Assignment:
     
         
 if __name__ == "__main__":
-    gmail = Gmail()
+    gmail_authenticator = GmailAuthenticator(
+        credentials_file=os.getenv('GMAIL_CREDENTIALS_FILE'),
+        token_file=os.getenv('GMAIL_TOKEN_FILE')
+    )
+    gmail = GmailService(gmail_authenticator)
     db = SQLiteDatabase()
     file_handler = JSONFileHandler('rules1.json')
     

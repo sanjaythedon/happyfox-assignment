@@ -1,1 +1,1 @@
-from Gmail.gmail import Gmail
+from Gmail.gmail import (GmailService, GmailAuthenticator)

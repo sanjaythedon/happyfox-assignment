@@ -1,19 +1,19 @@
 import os
 import pickle
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
+from Gmail.email_service import EmailAuthenticator, EmailService
 from utils import get_message_body
 
 
-class Gmail:
+class GmailAuthenticator(EmailAuthenticator):
     """
-    Gmail class for interacting with Gmail API.
-    Handles authentication and provides methods for email operations.
+    Handles authentication with Gmail API using OAuth2.
     """
     # Gmail API scopes
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly',
@@ -21,21 +21,18 @@ class Gmail:
     
     def __init__(self, credentials_file: Optional[str] = None, token_file: Optional[str] = None):
         """
-        Initialize the Gmail class with credentials.
+        Initialize the Gmail authenticator.
         
         Args:
-            credentials_file: Path to the credentials.json file (from Google Cloud Console)
+            credentials_file: Path to the credentials.json file
             token_file: Path to store/retrieve the token.pickle file
-        
-        Raises:
-            ValueError: If authentication fails
         """
         # Load environment variables from .env file
         load_dotenv()
         
         # Get credentials from .env if not provided
-        self.credentials_file = credentials_file or os.getenv('GMAIL_CREDENTIALS_FILE')
-        self.token_file = token_file or os.getenv('GMAIL_TOKEN_FILE')
+        self.credentials_file = credentials_file
+        self.token_file = token_file
         
         if not self.credentials_file:
             raise ValueError("Credentials file path not provided in arguments or .env file")
@@ -43,14 +40,8 @@ class Gmail:
         # Default token file location if not specified
         if not self.token_file:
             self.token_file = 'token.pickle'
-        
-        # Authenticate and build the service
-        self.service = self._authenticate()
-        
-        if not self.service:
-            raise ValueError("Failed to authenticate with Gmail API")
     
-    def _authenticate(self):
+    def authenticate(self) -> Any:
         """
         Authenticate to Gmail API using OAuth2.
         
@@ -85,11 +76,79 @@ class Gmail:
         except Exception as e:
             print(f"Authentication failed: {e}")
             return None
+
+
+class EmailParser:
+    """
+    Handles parsing of email content.
+    """
+    @staticmethod
+    def parse_email(content: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Parse email content into a structured format.
+        
+        Args:
+            content: Raw email content from Gmail API
+            
+        Returns:
+            Structured email data
+        """
+        try:
+            headers = content['payload']['headers']
+            email_id = content['id']
+            subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'No Subject')
+            sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), 'Unknown Sender')
+            date = next((h['value'] for h in headers if h['name'].lower() == 'date'), 'Unknown Date')
+            body = get_message_body(content['payload'])
+            
+            return {
+                'unique_id': email_id,
+                'Subject': subject,
+                'From': sender,
+                'Date Received': date,
+                'Message': body
+            }
+        except Exception as e:
+            print(f"Error parsing email: {e}")
+            return None
+
+
+class GmailService(EmailService):
+    """
+    Gmail service implementation using the EmailService interface.
+    """
     
-    def fetch_emails(self, max_results: int = 10, query: str = ""):
+    def __init__(self, authenticator: GmailAuthenticator):
+        """
+        Initialize the Gmail service.
+        
+        Args:
+            authenticator: Gmail authenticator instance
+        
+        Raises:
+            ValueError: If authentication fails
+        """
+        self.authenticator = authenticator
+        self.service = self.authenticator.authenticate()
+        self.parser = EmailParser()
+        
+        if not self.service:
+            raise ValueError("Failed to authenticate with Gmail API")
+    
+    def fetch_emails(self, max_results: int = 10, query: str = "") -> List[Dict[str, Any]]:
+        """
+        Fetch emails from Gmail.
+        
+        Args:
+            max_results: Maximum number of emails to fetch
+            query: Gmail search query string
+            
+        Returns:
+            List of structured email objects
+        """
         if not self.service:
             print("Gmail service not authenticated")
-            return None
+            return []
             
         try:
             results = self.service.users().messages().list(
@@ -110,50 +169,64 @@ class Gmail:
             message_list = []
             
             for message in messages:
-                msg = self.service.users().messages().get(
-                    userId='me', 
-                    id=message['id'],
-                    format='full'
-                ).execute()
-                
-                email_content = self.get_email_structure(msg)
-                
-                message_list.append(email_content)
+                email = self.get_email(message['id'])
+                if email:
+                    message_list.append(email)
             
             return message_list
             
         except Exception as e:
             print(f"Error fetching emails: {e}")
-            return None
-
-    def get_email_structure(self, content):
-        try:
-            headers = content['payload']['headers']
-            id = content['id']
-            subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'No Subject')
-            sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), 'Unknown Sender')
-            date = next((h['value'] for h in headers if h['name'].lower() == 'date'), 'Unknown Date')
-            body = get_message_body(content['payload'])
-            
-            return {
-                'unique_id': id,
-                'Subject': subject,
-                'From': sender,
-                'Date Received': date,
-                'Message': body
-            }
-
-        except Exception as e:
-            print(f"Error getting email structure: {e}")
-            return None
+            return []
+    
+    def get_email(self, email_id: str) -> Dict[str, Any]:
+        """
+        Get a specific email by ID.
         
-    def update_email(self, message_id: str, mark_as_read: bool = False, move_to_label: Optional[str] = None):
+        Args:
+            email_id: ID of the email to retrieve
+            
+        Returns:
+            Structured email object
+        """
+        if not self.service:
+            print("Gmail service not authenticated")
+            return None
+            
+        try:
+            msg = self.service.users().messages().get(
+                userId='me', 
+                id=email_id,
+                format='full'
+            ).execute()
+            
+            return self.parser.parse_email(msg)
+            
+        except Exception as e:
+            print(f"Error getting email: {e}")
+            return None
+    
+    def update_email(self, message_id: str, **kwargs) -> bool:
+        """
+        Update an email's properties.
+        
+        Args:
+            message_id: ID of the email to update
+            **kwargs: Properties to update (supported: mark_as_read, move_to_label)
+            
+        Returns:
+            True if update was successful, False otherwise
+        """
         if not self.service:
             print("Gmail service not authenticated")
             return False
+        
+        mark_as_read = kwargs.get('mark_as_read', False)
+        move_to_label = kwargs.get('move_to_label', None)
             
         if not mark_as_read and not move_to_label:
-            raise ValueError("At least one update action must be specified")
+            print("No update actions specified")
+            return False
             
         try:
             modifications = {}
@@ -166,11 +239,8 @@ class Gmail:
                 ).execute()
                 
                 current_labels = msg.get('labelIds', [])
-                print("current_labels", current_labels)
                 
                 if 'UNREAD' in current_labels:
-                    current_labels.remove('UNREAD')
-                    
                     modifications['removeLabelIds'] = ['UNREAD']
                     print(f"Marking message {message_id} as read")
                 else:
@@ -181,7 +251,7 @@ class Gmail:
                 remove_labels = []
                 
                 if move_to_label != 'INBOX':
-                    if not 'removeLabelIds' in modifications:
+                    if 'removeLabelIds' not in modifications:
                         msg = self.service.users().messages().get(
                             userId='me',
                             id=message_id,
@@ -200,45 +270,53 @@ class Gmail:
                         modifications['removeLabelIds'].extend(remove_labels)
                     else:
                         modifications['removeLabelIds'] = remove_labels
-                        
-                print(f"Moving message {message_id} to label '{move_to_label}'")
             
             if modifications:
-                result = self.service.users().messages().modify(
+                self.service.users().messages().modify(
                     userId='me',
                     id=message_id,
                     body=modifications
                 ).execute()
-                
-                print(f"Successfully updated message {message_id}")
                 return True
-            else:
-                print("No modifications needed")
-                return True
-                
+            
+            return False
+            
         except Exception as e:
             print(f"Error updating email: {e}")
             return False
 
+
 def main():
+    """Example usage of the Gmail service."""
     try:
-        print("Initializing Gmail client...")
-        gmail = Gmail()
+        # Create authenticator
+        authenticator = GmailAuthenticator(
+            credentials_file=os.getenv('GMAIL_CREDENTIALS_FILE'),
+            token_file=os.getenv('GMAIL_TOKEN_FILE')
+        )
         
-        print("Authentication successful!")
-        print(f"Gmail service initialized: {gmail.service is not None}")
-
-        emails = gmail.fetch_emails()
-        print(emails)
-        # email_id = emails[0]['id']
-
-        # gmail.update_email(email_id, mark_as_read=True)
-        # gmail.update_email(email_id, move_to_label='UPDATES')
-    
-    except ValueError as e:
-        print(f"Error: {e}")
+        # Create Gmail service
+        gmail_service = GmailService(authenticator)
+        
+        # Fetch emails
+        emails = gmail_service.fetch_emails(max_results=5)
+        
+        if emails:
+            print("\nEmail Summary:")
+            for email in emails:
+                print(f"Subject: {email['Subject']}")
+                print(f"From: {email['From']}")
+                print(f"Date: {email['Date Received']}")
+                print("-" * 50)
+            
+            # Mark first email as read
+            first_email_id = emails[0]['unique_id']
+            if gmail_service.update_email(first_email_id, mark_as_read=True):
+                print(f"Marked email '{emails[0]['Subject']}' as read")
+        
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"Error: {e}")
+
 
 if __name__ == "__main__":
     main()
