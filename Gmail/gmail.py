@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
 from Gmail.helpers import EmailParser
-from Gmail.email_service import EmailAuthenticator, EmailService
+from Gmail.interfaces import EmailAuthenticator, EmailService
 
 
 class GmailAuthenticator(EmailAuthenticator):

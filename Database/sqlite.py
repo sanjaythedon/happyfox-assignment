@@ -1,7 +1,7 @@
 import sqlite3
 import os
 from pathlib import Path
-from Database.database import Database
+from Database.interfaces import Database
 
 
 class SQLiteConnection:

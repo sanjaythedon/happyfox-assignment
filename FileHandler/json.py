@@ -2,7 +2,7 @@ import json
 import os
 from typing import Any
 
-from FileHandler.file_handler import FileReader
+from FileHandler.interfaces import FileReader
 
 
 class JSONFileHandler(FileReader):
