@@ -4,4 +4,4 @@ credentials.json
 __pycache__
 token.pickle
 *.db
-*.json
+test_data.json
