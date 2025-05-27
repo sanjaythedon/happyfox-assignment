@@ -18,13 +18,6 @@ class EmailService(ABC):
     def fetch_emails(self, max_results: int = 10, query: str = "") -> List[Dict[str, Any]]:
         """
         Fetch emails from the service.
-        
-        Args:
-            max_results: Maximum number of emails to fetch
-            query: Query string to filter emails
-            
-        Returns:
-            List of email objects
         """
         pass
     
@@ -32,12 +25,6 @@ class EmailService(ABC):
     def get_email(self, email_id: str) -> Dict[str, Any]:
         """
         Get a specific email by ID.
-        
-        Args:
-            email_id: ID of the email to retrieve
-            
-        Returns:
-            Email object
         """
         pass
     
@@ -45,12 +32,5 @@ class EmailService(ABC):
     def update_email(self, message_id: str, **kwargs) -> bool:
         """
         Update an email's properties.
-        
-        Args:
-            email_id: ID of the email to update
-            **kwargs: Properties to update
-            
-        Returns:
-            True if update was successful, False otherwise
         """
         pass

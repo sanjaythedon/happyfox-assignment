@@ -9,12 +9,27 @@ class EmailParser:
 
     @staticmethod
     def decode_text(text):
+        """
+        Decodes a base64 encoded text.
+        
+        Args:
+            text: Base64 encoded text
+            
+        Returns:
+            Decoded text
+        """
         return base64.urlsafe_b64decode(text).decode('utf-8')   
 
     @staticmethod
     def get_message_body(payload):
         """
         Extract the message body from the payload.
+        
+        Args:
+            payload: Email payload from Gmail API
+            
+        Returns:
+            Message body as a string, or None if not found
         """
 
         # If the message is simple

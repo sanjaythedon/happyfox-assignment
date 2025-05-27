@@ -1,6 +1,4 @@
 import sqlite3
-import os
-from pathlib import Path
 from Database.interfaces import Database
 
 
@@ -54,7 +52,16 @@ class SQLiteTableManager:
         self.connection_manager = connection_manager
     
     def create_table(self, table_name, columns):
-        """Create a table in the database."""
+        """
+        Create a table in the database.
+        
+        Args:
+            table_name: Name of the table to create
+            columns: Dictionary of column names and data types
+        
+        Returns:
+            True if table was created successfully, False otherwise
+        """
         try:
             cursor = self.connection_manager.get_cursor()
             if not cursor:
@@ -78,7 +85,16 @@ class SQLiteDataManager:
         self.connection_manager = connection_manager
     
     def insert(self, table_name, data):
-        """Insert data into a table."""
+        """
+        Insert data into a table.
+        
+        Args:
+            table_name: Name of the table to insert data into
+            data: Dictionary of column names and values to insert
+        
+        Returns:
+            ID of the inserted row, or None if insertion failed
+        """
         try:
             cursor = self.connection_manager.get_cursor()
             if not cursor:
@@ -101,7 +117,18 @@ class SQLiteDataManager:
             return None
     
     def read(self, table_name, columns=None, condition=None, condition_values=None):
-        """Read data from a table."""
+        """
+        Read data from a table.
+        
+        Args:
+            table_name: Name of the table to read data from
+            columns: List of column names to select, or None to select all columns
+            condition: SQL condition to filter rows, or None to select all rows
+            condition_values: Values to use in the condition, or None if no condition is specified
+        
+        Returns:
+            List of dictionaries containing the selected data
+        """
         try:
             cursor = self.connection_manager.get_cursor()
             if not cursor:
@@ -141,7 +168,18 @@ class SQLiteDataManager:
             return []
     
     def update(self, table_name, data, condition, condition_values):
-        """Update data in a table."""
+        """
+        Update data in a table.
+        
+        Args:
+            table_name: Name of the table to update data in
+            data: Dictionary of column names and values to update
+            condition: SQL condition to filter rows to update
+            condition_values: Values to use in the condition
+        
+        Returns:
+            Number of rows updated
+        """
         try:
             cursor = self.connection_manager.get_cursor()
             if not cursor:
@@ -165,20 +203,20 @@ class SQLiteDataManager:
 class SQLiteDatabase(Database):
     """SQLite database implementation using composition of specialized components."""
     
-    def __init__(self, db_name="app.db", db_path=None):
-        """Initialize the SQLiteDatabase."""
-        if db_path:
-            Path(db_path).mkdir(parents=True, exist_ok=True)
-            full_path = os.path.join(db_path, db_name)
-        else:
-            full_path = db_name
-            
-        # Create specialized components using composition
-        self.connection_manager = SQLiteConnection(full_path)
-        self.table_manager = SQLiteTableManager(self.connection_manager)
-        self.data_manager = SQLiteDataManager(self.connection_manager)
+    def __init__(self, connection_manager=None, 
+                 table_manager=None, data_manager=None):
+        """Initialize the SQLiteDatabase.
         
-        # Connect to database
+        Args:
+            connection_manager (SQLiteConnection, optional): Custom connection manager
+            table_manager (SQLiteTableManager, optional): Custom table manager
+            data_manager (SQLiteDataManager, optional): Custom data manager
+        """
+        
+        self.connection_manager = connection_manager
+        self.table_manager = table_manager
+        self.data_manager = data_manager
+        
         self.connect()
     
     def connect(self):
@@ -207,7 +245,12 @@ class SQLiteDatabase(Database):
 
 
 if __name__ == "__main__":
-    db = SQLiteDatabase()
+    connection_manager = SQLiteConnection("app.db")
+    db = SQLiteDatabase(
+        connection_manager=connection_manager,
+        table_manager=SQLiteTableManager(connection_manager),
+        data_manager=SQLiteDataManager(connection_manager)
+    )
     
     columns = {
         "id": "INTEGER PRIMARY KEY",

@@ -103,7 +103,7 @@ class EmailOperationsBundler:
     @staticmethod
     def bundle_email_operations(rule_operations: List[Dict[str, Any]]) -> List[EmailOperation]:
         """
-        Create EmailOperation objects from rule operations.
+        Bundles email operations based on the rule operations.
         
         Args:
             rule_operations: List of operation dictionaries from the rule
