@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 
-class Database(ABC):
-    """Abstract base class for database operations."""
+class Connection(ABC):
+    """Interface for database connection management."""
     
     @abstractmethod
     def connect(self):
@@ -10,9 +10,22 @@ class Database(ABC):
         pass
     
     @abstractmethod
+    def close(self):
+        """Close the database connection."""
+        pass
+
+
+class TableOperations(ABC):
+    """Interface for table operations."""
+    
+    @abstractmethod
     def create_table(self, table_name, columns):
         """Create a table in the database."""
         pass
+
+
+class DataOperationsWithoutDelete(ABC):
+    """Interface for data operations."""
     
     @abstractmethod
     def insert(self, table_name, data):
@@ -28,11 +41,10 @@ class Database(ABC):
     def update(self, table_name, data, condition, condition_values):
         """Update data in a table."""
         pass
-    
-    @abstractmethod
-    def close(self):
-        """Close the database connection."""
-        pass
+
+
+class Database(Connection, TableOperations, DataOperationsWithoutDelete):
+    """Complete database interface combining all operations."""
     
     def __del__(self):
         """Destructor to ensure connection is closed."""

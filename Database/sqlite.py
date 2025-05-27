@@ -4,25 +4,16 @@ from pathlib import Path
 from Database.database import Database
 
 
-class SQLiteDatabase(Database):
-    def __init__(self, db_name="app.db", db_path=None):
-        """
-        Initialize the Database class.
-        """
-        self.db_name = db_name
-        
-        if db_path:
-            Path(db_path).mkdir(parents=True, exist_ok=True)
-            self.db_path = os.path.join(db_path, db_name)
-        else:
-            self.db_path = db_name
-            
+class SQLiteConnection:
+    """Handles SQLite connection management."""
+    
+    def __init__(self, db_path):
+        self.db_path = db_path
         self.connection = None
         self.cursor = None
-        
-        self.connect()
-        
+    
     def connect(self):
+        """Establish connection to SQLite database."""
         try:
             self.connection = sqlite3.connect(self.db_path)
             self.cursor = self.connection.cursor()
@@ -30,29 +21,69 @@ class SQLiteDatabase(Database):
         except sqlite3.Error as e:
             print(f"Database connection error: {e}")
             return False
+    
+    def close(self):
+        """Close the database connection."""
+        if self.connection:
+            self.connection.close()
+            self.connection = None
+            self.cursor = None
+    
+    def get_connection(self):
+        """Get the current connection."""
+        return self.connection
+    
+    def get_cursor(self):
+        """Get the current cursor."""
+        return self.cursor
+    
+    def commit(self):
+        """Commit the current transaction."""
+        if self.connection:
+            self.connection.commit()
+    
+    def __del__(self):
+        """Ensure connection is closed when object is destroyed."""
+        self.close()
 
 
+class SQLiteTableManager:
+    """Handles SQLite table operations."""
+    
+    def __init__(self, connection_manager):
+        self.connection_manager = connection_manager
+    
     def create_table(self, table_name, columns):
-        """
-        Create a table in the database.
-        """
+        """Create a table in the database."""
         try:
+            cursor = self.connection_manager.get_cursor()
+            if not cursor:
+                return False
+                
             columns_str = ", ".join([f"{col_name} {data_type}" for col_name, data_type in columns.items()])
             query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str})"
             
-            self.cursor.execute(query)
-            self.connection.commit()
+            cursor.execute(query)
+            self.connection_manager.commit()
             return True
         except sqlite3.Error as e:
             print(f"Error creating table {table_name}: {e}")
             return False
-            
+
+
+class SQLiteDataManager:
+    """Handles SQLite data operations."""
+    
+    def __init__(self, connection_manager):
+        self.connection_manager = connection_manager
+    
     def insert(self, table_name, data):
-        """
-        Insert data into a table.
-        
-        """
+        """Insert data into a table."""
         try:
+            cursor = self.connection_manager.get_cursor()
+            if not cursor:
+                return None
+                
             columns = list(data.keys())
             values = list(data.values())
             
@@ -61,19 +92,21 @@ class SQLiteDatabase(Database):
             columns_str = ", ".join(columns)
             query = f"INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})"
             
-            self.cursor.execute(query, values)
-            self.connection.commit()
+            cursor.execute(query, values)
+            self.connection_manager.commit()
             
-            return self.cursor.lastrowid
+            return cursor.lastrowid
         except sqlite3.Error as e:
             print(f"Error inserting into table {table_name}: {e}")
             return None
-            
+    
     def read(self, table_name, columns=None, condition=None, condition_values=None):
-        """
-        Read data from a table.
-        """
+        """Read data from a table."""
         try:
+            cursor = self.connection_manager.get_cursor()
+            if not cursor:
+                return []
+                
             if columns:
                 columns_str = ", ".join(columns)
             else:
@@ -84,16 +117,16 @@ class SQLiteDatabase(Database):
                 query += f" WHERE {condition}"
                 
             if condition_values:
-                self.cursor.execute(query, condition_values)
+                cursor.execute(query, condition_values)
             else:
-                self.cursor.execute(query)
+                cursor.execute(query)
                 
-            results = self.cursor.fetchall()
+            results = cursor.fetchall()
             
             if columns:
                 column_names = columns
             else:
-                column_names = [description[0] for description in self.cursor.description]
+                column_names = [description[0] for description in cursor.description]
                 
             formatted_results = []
             for row in results:
@@ -106,34 +139,71 @@ class SQLiteDatabase(Database):
         except sqlite3.Error as e:
             print(f"Error reading from table {table_name}: {e}")
             return []
-        
+    
     def update(self, table_name, data, condition, condition_values):
-        """
-        Update data in a table.
-        """
+        """Update data in a table."""
         try:
+            cursor = self.connection_manager.get_cursor()
+            if not cursor:
+                return 0
+                
             set_clause = ", ".join([f"{column} = ?" for column in data.keys()])
             
             query = f"UPDATE {table_name} SET {set_clause} WHERE {condition}"
             
             values = list(data.values()) + list(condition_values)
             
-            self.cursor.execute(query, values)
-            self.connection.commit()
+            cursor.execute(query, values)
+            self.connection_manager.commit()
             
-            return self.cursor.rowcount
+            return cursor.rowcount
         except sqlite3.Error as e:
             print(f"Error updating table {table_name}: {e}")
             return 0
 
-    def close(self):
-        if self.connection:
-            self.connection.close()
-            self.connection = None
-            self.cursor = None
+
+class SQLiteDatabase(Database):
+    """SQLite database implementation using composition of specialized components."""
     
-    def __del__(self):
-        self.close()
+    def __init__(self, db_name="app.db", db_path=None):
+        """Initialize the SQLiteDatabase."""
+        if db_path:
+            Path(db_path).mkdir(parents=True, exist_ok=True)
+            full_path = os.path.join(db_path, db_name)
+        else:
+            full_path = db_name
+            
+        # Create specialized components using composition
+        self.connection_manager = SQLiteConnection(full_path)
+        self.table_manager = SQLiteTableManager(self.connection_manager)
+        self.data_manager = SQLiteDataManager(self.connection_manager)
+        
+        # Connect to database
+        self.connect()
+    
+    def connect(self):
+        """Connect to the database."""
+        return self.connection_manager.connect()
+    
+    def close(self):
+        """Close the database connection."""
+        self.connection_manager.close()
+    
+    def create_table(self, table_name, columns):
+        """Create a table in the database."""
+        return self.table_manager.create_table(table_name, columns)
+    
+    def insert(self, table_name, data):
+        """Insert data into a table."""
+        return self.data_manager.insert(table_name, data)
+    
+    def read(self, table_name, columns=None, condition=None, condition_values=None):
+        """Read data from a table."""
+        return self.data_manager.read(table_name, columns, condition, condition_values)
+    
+    def update(self, table_name, data, condition, condition_values):
+        """Update data in a table."""
+        return self.data_manager.update(table_name, data, condition, condition_values)
 
 
 if __name__ == "__main__":
@@ -146,7 +216,6 @@ if __name__ == "__main__":
         "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
     }
     db.create_table("users", columns)
-    print(f"Database created at: {db.db_path}")
     
     user1 = {
         "name": "John Doe",
@@ -187,5 +256,3 @@ if __name__ == "__main__":
     print("\nAfter update:")
     for user in updated_user:
         print(f"ID: {user['id']}, Name: {user['name']}, Email: {user['email']}")
-    
-    db.close()
