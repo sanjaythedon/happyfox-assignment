@@ -7,8 +7,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
+from Gmail.helpers import EmailParser
 from Gmail.email_service import EmailAuthenticator, EmailService
-from utils import get_message_body
 
 
 class GmailAuthenticator(EmailAuthenticator):
@@ -75,41 +75,6 @@ class GmailAuthenticator(EmailAuthenticator):
             return service
         except Exception as e:
             print(f"Authentication failed: {e}")
-            return None
-
-
-class EmailParser:
-    """
-    Handles parsing of email content.
-    """
-    @staticmethod
-    def parse_email(content: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Parse email content into a structured format.
-        
-        Args:
-            content: Raw email content from Gmail API
-            
-        Returns:
-            Structured email data
-        """
-        try:
-            headers = content['payload']['headers']
-            email_id = content['id']
-            subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'No Subject')
-            sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), 'Unknown Sender')
-            date = next((h['value'] for h in headers if h['name'].lower() == 'date'), 'Unknown Date')
-            body = get_message_body(content['payload'])
-            
-            return {
-                'unique_id': email_id,
-                'Subject': subject,
-                'From': sender,
-                'Date Received': date,
-                'Message': body
-            }
-        except Exception as e:
-            print(f"Error parsing email: {e}")
             return None
 
 
