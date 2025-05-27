@@ -113,7 +113,7 @@ class Gmail:
             
             message_list = []
             
-            for message in messages:
+            for message in messages[:1]:
                 msg = self.service.users().messages().get(
                     userId='me', 
                     id=message['id'],
@@ -151,7 +151,7 @@ class Gmail:
         """
         Extract the message body from the payload.
         """
-        
+
         # If the message is simple
         if 'body' in payload and payload['body'].get('data'):
             return base64.urlsafe_b64decode(payload['body']['data']).decode('utf-8')
@@ -249,7 +249,10 @@ def main():
         print("Authentication successful!")
         print(f"Gmail service initialized: {gmail.service is not None}")
 
-        gmail.fetch_emails()
+        emails = gmail.fetch_emails()
+        email_id = emails[0]['id']
+
+        gmail.update_email(email_id, mark_as_read=True)
     
     except ValueError as e:
         print(f"Error: {e}")
