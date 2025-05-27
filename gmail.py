@@ -91,23 +91,11 @@ class Gmail:
             return None
     
     def fetch_emails(self, max_results: int = 10, query: str = ""):
-        """
-        Fetch emails from Gmail and print their details.
-        
-        Args:
-            max_results: Maximum number of emails to fetch (default: 10)
-            query: Search query to filter emails (uses Gmail search syntax)
-                   Examples: "from:example@gmail.com", "subject:hello", "is:unread"
-        
-        Returns:
-            List of message objects or None if fetching fails
-        """
         if not self.service:
             print("Gmail service not authenticated")
             return None
             
         try:
-            # Get list of messages
             results = self.service.users().messages().list(
                 userId='me',
                 maxResults=max_results,
@@ -132,16 +120,13 @@ class Gmail:
                     format='full'
                 ).execute()
                 
-                # Extract headers
                 headers = msg['payload']['headers']
                 subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'No Subject')
                 sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), 'Unknown Sender')
                 date = next((h['value'] for h in headers if h['name'].lower() == 'date'), 'Unknown Date')
                 
-                # Extract body
                 body = self._get_message_body(msg['payload'])
                 
-                # Print email details
                 print(f"Subject: {subject}")
                 print(f"From: {sender}")
                 print(f"Date: {date}")
@@ -165,13 +150,8 @@ class Gmail:
     def _get_message_body(self, payload):
         """
         Extract the message body from the payload.
-        
-        Args:
-            payload: The message payload from Gmail API
-            
-        Returns:
-            Decoded message body as string or None if not found
         """
+        
         # If the message is simple
         if 'body' in payload and payload['body'].get('data'):
             return base64.urlsafe_b64decode(payload['body']['data']).decode('utf-8')
@@ -182,29 +162,95 @@ class Gmail:
                 if part['mimeType'] == 'text/plain' and part['body'].get('data'):
                     return base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
                     
-                # Recursively check parts
                 if 'parts' in part:
                     body = self._get_message_body(part)
                     if body:
                         return body
                         
         return None
+        
+    def update_email(self, message_id: str, mark_as_read: bool = False, move_to_label: Optional[str] = None):
+        if not self.service:
+            print("Gmail service not authenticated")
+            return False
+            
+        if not mark_as_read and not move_to_label:
+            raise ValueError("At least one update action must be specified")
+            
+        try:
+            modifications = {}
+            
+            if mark_as_read:
+                msg = self.service.users().messages().get(
+                    userId='me',
+                    id=message_id,
+                    format='minimal'
+                ).execute()
+                
+                current_labels = msg.get('labelIds', [])
+                
+                if 'UNREAD' in current_labels:
+                    current_labels.remove('UNREAD')
+                    
+                    modifications['removeLabelIds'] = ['UNREAD']
+                    print(f"Marking message {message_id} as read")
+                else:
+                    print(f"Message {message_id} is already marked as read")
+            
+            if move_to_label:
+                add_labels = [move_to_label]
+                remove_labels = []
+                
+                if move_to_label != 'INBOX':
+                    if not 'removeLabelIds' in modifications:
+                        msg = self.service.users().messages().get(
+                            userId='me',
+                            id=message_id,
+                            format='minimal'
+                        ).execute()
+                        current_labels = msg.get('labelIds', [])
+                    
+                    if 'INBOX' in current_labels:
+                        remove_labels.append('INBOX')
+                
+                if add_labels:
+                    modifications['addLabelIds'] = add_labels
+                
+                if remove_labels:
+                    if 'removeLabelIds' in modifications:
+                        modifications['removeLabelIds'].extend(remove_labels)
+                    else:
+                        modifications['removeLabelIds'] = remove_labels
+                        
+                print(f"Moving message {message_id} to label '{move_to_label}'")
+            
+            if modifications:
+                result = self.service.users().messages().modify(
+                    userId='me',
+                    id=message_id,
+                    body=modifications
+                ).execute()
+                
+                print(f"Successfully updated message {message_id}")
+                return True
+            else:
+                print("No modifications needed")
+                return True
+                
+        except Exception as e:
+            print(f"Error updating email: {e}")
+            return False
 
 def main():
     try:
-        # Initialize the Gmail client
-        # This will trigger the authentication flow if needed
         print("Initializing Gmail client...")
         gmail = Gmail()
         
-        # If we get here, authentication was successful
         print("Authentication successful!")
         print(f"Gmail service initialized: {gmail.service is not None}")
 
         gmail.fetch_emails()
-        
-        # You can add more test functionality here
-        
+    
     except ValueError as e:
         print(f"Error: {e}")
     except Exception as e:
