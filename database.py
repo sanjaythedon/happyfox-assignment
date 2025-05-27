@@ -29,19 +29,32 @@ class Database:
         except sqlite3.Error as e:
             print(f"Database connection error: {e}")
             return False
-    
-    def close(self):
-        if self.connection:
-            self.connection.close()
-            self.connection = None
-            self.cursor = None
-    
-    def __del__(self):
-        self.close()
+
+
+    def create_table(self, table_name, columns):
+        """
+        Create a table in the database.
+        """
+        try:
+            columns_str = ", ".join([f"{col_name} {data_type}" for col_name, data_type in columns.items()])
+            query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str})"
+            
+            self.cursor.execute(query)
+            self.connection.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error creating table {table_name}: {e}")
+            return False
 
 
 if __name__ == "__main__":
-    # Example usage
     db = Database()
+    
+    columns = {
+        "id": "INTEGER PRIMARY KEY",
+        "name": "TEXT NOT NULL",
+        "email": "TEXT",
+        "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    }
+    db.create_table("users", columns)
     print(f"Database created at: {db.db_path}")
-    db.close()
