@@ -3,3 +3,5 @@ credentials.json
 .env
 __pycache__
 token.pickle
+*.db
+*.json
