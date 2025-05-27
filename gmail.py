@@ -4,10 +4,7 @@ Gmail Module for authenticating, fetching, and updating emails in Gmail.
 import os
 import pickle
 import base64
-from pathlib import Path
-from typing import Optional, List, Dict, Any
-from email.mime.text import MIMEText
-from datetime import datetime
+from typing import Optional
 
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
