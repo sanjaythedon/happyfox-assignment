@@ -29,7 +29,7 @@ class Assignment:
                 condition_values = []
                 
                 for condition in rule_conditions:
-                    field_name = condition.get('field_name')
+                    field_name = condition.get('field_name').title()
                     predicate = condition.get('predicate')
                     value = condition.get('value')
                     unit = condition.get('unit', None)
