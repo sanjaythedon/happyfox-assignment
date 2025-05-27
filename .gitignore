@@ -5,3 +5,4 @@ __pycache__
 token.pickle
 *.db
 test_data.json
+rules1.json

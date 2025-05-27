@@ -14,7 +14,7 @@
           "value": "Interview"
         },
         {
-          "field_name": "Date received",
+          "field_name": "Date Received",
           "predicate": "is less than",
           "value": "2",
           "unit": "days"

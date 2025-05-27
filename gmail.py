@@ -141,10 +141,10 @@ class Gmail:
             
             return {
                 'unique_id': id,
-                'subject': subject,
-                'sender': sender,
-                'date': date,
-                'body': body
+                'Subject': subject,
+                'From': sender,
+                'Date Received': date,
+                'Message': body
             }
 
         except Exception as e:
