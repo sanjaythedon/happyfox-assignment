@@ -1,4 +1,4 @@
-from gmail import Gmail
+from Gmail import Gmail
 from Database import SQLiteDatabase
 from file_handler import JSONFileHandler
 from datetime import datetime, timedelta, timezone

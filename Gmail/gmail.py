@@ -1,15 +1,14 @@
-"""
-Gmail Module for authenticating, fetching, and updating emails in Gmail.
-"""
 import os
 import pickle
-import base64
 from typing import Optional
 
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
+
+from utils import get_message_body
+
 
 class Gmail:
     """
@@ -134,7 +133,7 @@ class Gmail:
             subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'No Subject')
             sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), 'Unknown Sender')
             date = next((h['value'] for h in headers if h['name'].lower() == 'date'), 'Unknown Date')
-            body = self._get_message_body(content['payload'])
+            body = get_message_body(content['payload'])
             
             return {
                 'unique_id': id,
@@ -147,28 +146,6 @@ class Gmail:
         except Exception as e:
             print(f"Error getting email structure: {e}")
             return None
-    
-    def _get_message_body(self, payload):
-        """
-        Extract the message body from the payload.
-        """
-
-        # If the message is simple
-        if 'body' in payload and payload['body'].get('data'):
-            return base64.urlsafe_b64decode(payload['body']['data']).decode('utf-8')
-            
-        # If the message is multipart
-        if 'parts' in payload:
-            for part in payload['parts']:
-                if part['mimeType'] == 'text/plain' and part['body'].get('data'):
-                    return base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
-                    
-                if 'parts' in part:
-                    body = self._get_message_body(part)
-                    if body:
-                        return body
-                        
-        return None
         
     def update_email(self, message_id: str, mark_as_read: bool = False, move_to_label: Optional[str] = None):
         if not self.service:
