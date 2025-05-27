@@ -105,15 +105,6 @@ class Database:
         except sqlite3.Error as e:
             print(f"Error reading from table {table_name}: {e}")
             return []
-
-    def close(self):
-        if self.connection:
-            self.connection.close()
-            self.connection = None
-            self.cursor = None
-    
-    def __del__(self):
-        self.close()
         
     def update(self, table_name, data, condition, condition_values):
         """
@@ -133,6 +124,15 @@ class Database:
         except sqlite3.Error as e:
             print(f"Error updating table {table_name}: {e}")
             return 0
+
+    def close(self):
+        if self.connection:
+            self.connection.close()
+            self.connection = None
+            self.cursor = None
+    
+    def __del__(self):
+        self.close()
 
 
 if __name__ == "__main__":
