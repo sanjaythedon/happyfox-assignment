@@ -86,13 +86,49 @@ class Database:
         except sqlite3.Error as e:
             print(f"Error inserting into table {table_name}: {e}")
             return None
+            
+    def read(self, table_name, columns=None, condition=None, condition_values=None):
+        """
+        Read data from a table.
+        """
+        try:
+            if columns:
+                columns_str = ", ".join(columns)
+            else:
+                columns_str = "*"
+            query = f"SELECT {columns_str} FROM {table_name}"
+            
+            if condition:
+                query += f" WHERE {condition}"
+                
+            if condition_values:
+                self.cursor.execute(query, condition_values)
+            else:
+                self.cursor.execute(query)
+                
+            results = self.cursor.fetchall()
+            
+            if columns:
+                column_names = columns
+            else:
+                column_names = [description[0] for description in self.cursor.description]
+                
+            formatted_results = []
+            for row in results:
+                row_dict = {}
+                for i, value in enumerate(row):
+                    row_dict[column_names[i]] = value
+                formatted_results.append(row_dict)
+                
+            return formatted_results
+        except sqlite3.Error as e:
+            print(f"Error reading from table {table_name}: {e}")
+            return []
 
 
 if __name__ == "__main__":
-    # Example usage
     db = Database()
     
-    # Example of creating a table
     columns = {
         "id": "INTEGER PRIMARY KEY",
         "name": "TEXT NOT NULL",
@@ -102,7 +138,6 @@ if __name__ == "__main__":
     db.create_table("users", columns)
     print(f"Database created at: {db.db_path}")
     
-    # Example of inserting data
     user1 = {
         "name": "John Doe",
         "email": "john.doe@example.com"
@@ -117,5 +152,19 @@ if __name__ == "__main__":
     user2_id = db.insert("users", user2)
     print(f"Inserted user with ID: {user2_id}")
     
-    # Close the database connection
+    all_users = db.read("users")
+    print("\nAll users:")
+    for user in all_users:
+        print(f"ID: {user['id']}, Name: {user['name']}, Email: {user['email']}")
+    
+    names_only = db.read("users", columns=["id", "name"])
+    print("\nNames only:")
+    for user in names_only:
+        print(f"ID: {user['id']}, Name: {user['name']}")
+    
+    filtered_users = db.read("users", condition="name = ?", condition_values=("John Doe",))
+    print("\nFiltered users:")
+    for user in filtered_users:
+        print(f"ID: {user['id']}, Name: {user['name']}, Email: {user['email']}")
+    
     db.close()
