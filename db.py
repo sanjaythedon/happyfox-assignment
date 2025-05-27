@@ -29,35 +29,16 @@ class Database:
         except sqlite3.Error as e:
             print(f"Database connection error: {e}")
             return False
-    
-    def close(self):
-        if self.connection:
-            self.connection.close()
-            self.connection = None
-            self.cursor = None
-    
-    def __del__(self):
-        self.close()
 
 
     def create_table(self, table_name, columns):
         """
         Create a table in the database.
-        
-        Args:
-            table_name (str): Name of the table to create
-            columns (dict): Dictionary with column names as keys and data types as values
-                           Example: {"id": "INTEGER PRIMARY KEY", "name": "TEXT"}
-        
-        Returns:
-            bool: True if table creation is successful, False otherwise
         """
         try:
-            # Construct the SQL query
             columns_str = ", ".join([f"{col_name} {data_type}" for col_name, data_type in columns.items()])
             query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_str})"
             
-            # Execute the query
             self.cursor.execute(query)
             self.connection.commit()
             return True
@@ -125,6 +106,34 @@ class Database:
             print(f"Error reading from table {table_name}: {e}")
             return []
 
+    def close(self):
+        if self.connection:
+            self.connection.close()
+            self.connection = None
+            self.cursor = None
+    
+    def __del__(self):
+        self.close()
+        
+    def update(self, table_name, data, condition, condition_values):
+        """
+        Update data in a table.
+        """
+        try:
+            set_clause = ", ".join([f"{column} = ?" for column in data.keys()])
+            
+            query = f"UPDATE {table_name} SET {set_clause} WHERE {condition}"
+            
+            values = list(data.values()) + list(condition_values)
+            
+            self.cursor.execute(query, values)
+            self.connection.commit()
+            
+            return self.cursor.rowcount
+        except sqlite3.Error as e:
+            print(f"Error updating table {table_name}: {e}")
+            return 0
+
 
 if __name__ == "__main__":
     db = Database()
@@ -165,6 +174,17 @@ if __name__ == "__main__":
     filtered_users = db.read("users", condition="name = ?", condition_values=("John Doe",))
     print("\nFiltered users:")
     for user in filtered_users:
+        print(f"ID: {user['id']}, Name: {user['name']}, Email: {user['email']}")
+    
+    update_data = {
+        "email": "john.updated@example.com"
+    }
+    rows_affected = db.update("users", update_data, "name = ?", ("John Doe",))
+    print(f"\nUpdated {rows_affected} row(s)")
+    
+    updated_user = db.read("users", condition="name = ?", condition_values=("John Doe",))
+    print("\nAfter update:")
+    for user in updated_user:
         print(f"ID: {user['id']}, Name: {user['name']}, Email: {user['email']}")
     
     db.close()
