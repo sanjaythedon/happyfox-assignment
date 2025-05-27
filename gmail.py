@@ -188,6 +188,7 @@ class Gmail:
                 ).execute()
                 
                 current_labels = msg.get('labelIds', [])
+                print("current_labels", current_labels)
                 
                 if 'UNREAD' in current_labels:
                     current_labels.remove('UNREAD')
@@ -252,7 +253,8 @@ def main():
         emails = gmail.fetch_emails()
         email_id = emails[0]['id']
 
-        gmail.update_email(email_id, mark_as_read=True)
+        # gmail.update_email(email_id, mark_as_read=True)
+        gmail.update_email(email_id, move_to_label='UPDATES')
     
     except ValueError as e:
         print(f"Error: {e}")
