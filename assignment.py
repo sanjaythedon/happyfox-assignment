@@ -1,6 +1,6 @@
 from Gmail import Gmail
 from Database import SQLiteDatabase
-from file_handler import JSONFileHandler
+from FileHandler import JSONFileHandler
 from datetime import datetime, timedelta, timezone
 
 
@@ -16,7 +16,7 @@ class Assignment:
         
     def run_operations(self):
         try:
-            rules = self.file_handler.read_json()
+            rules = self.file_handler.read()
             print(f"Successfully loaded {len(rules)} rule(s)")
             
             for rule in rules:

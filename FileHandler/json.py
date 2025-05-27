@@ -1,11 +1,11 @@
 import json
-import os
+from FileHandler.file_handler import FileHandler
 
-class JSONFileHandler:
+class JSONFileHandler(FileHandler):
     def __init__(self, file_path):
         self.file_path = file_path
     
-    def read_json(self):
+    def read(self):
         try:
             with open(self.file_path, 'r') as file:
                 return json.load(file)
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     try:
         handler = JSONFileHandler("test_data.json")
         
-        data = handler.read_json()
+        data = handler.read()
         
         print("\nSuccessfully read JSON data:")
         print(f"Name: {data['name']}")
