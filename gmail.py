@@ -113,38 +113,42 @@ class Gmail:
             
             message_list = []
             
-            for message in messages[:1]:
+            for message in messages:
                 msg = self.service.users().messages().get(
                     userId='me', 
                     id=message['id'],
                     format='full'
                 ).execute()
                 
-                headers = msg['payload']['headers']
-                subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'No Subject')
-                sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), 'Unknown Sender')
-                date = next((h['value'] for h in headers if h['name'].lower() == 'date'), 'Unknown Date')
+                email_content = self.get_email_structure(msg)
                 
-                body = self._get_message_body(msg['payload'])
-                
-                print(f"Subject: {subject}")
-                print(f"From: {sender}")
-                print(f"Date: {date}")
-                print(f"Snippet: {msg['snippet']}")
-                
-                if body:
-                    print(f"Body: {body[:100]}..." if len(body) > 100 else f"Body: {body}")
-                else:
-                    print("Body: [No readable content]")
-                    
-                print("-" * 50)
-                
-                message_list.append(msg)
+                message_list.append(email_content)
             
             return message_list
             
         except Exception as e:
             print(f"Error fetching emails: {e}")
+            return None
+
+    def get_email_structure(self, content):
+        try:
+            headers = content['payload']['headers']
+            id = content['id']
+            subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), 'No Subject')
+            sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), 'Unknown Sender')
+            date = next((h['value'] for h in headers if h['name'].lower() == 'date'), 'Unknown Date')
+            body = self._get_message_body(content['payload'])
+            
+            return {
+                'unique_id': id,
+                'subject': subject,
+                'sender': sender,
+                'date': date,
+                'body': body
+            }
+
+        except Exception as e:
+            print(f"Error getting email structure: {e}")
             return None
     
     def _get_message_body(self, payload):
@@ -251,10 +255,11 @@ def main():
         print(f"Gmail service initialized: {gmail.service is not None}")
 
         emails = gmail.fetch_emails()
-        email_id = emails[0]['id']
+        print(emails)
+        # email_id = emails[0]['id']
 
         # gmail.update_email(email_id, mark_as_read=True)
-        gmail.update_email(email_id, move_to_label='UPDATES')
+        # gmail.update_email(email_id, move_to_label='UPDATES')
     
     except ValueError as e:
         print(f"Error: {e}")
