@@ -1,5 +1,7 @@
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List
 from datetime import datetime, timedelta, timezone
+from RuleOperations.interfaces import EmailOperation
+from RuleOperations.interfaces import MarkAsReadOperation, MoveToLabelOperation
 
 
 class RuleParser:
@@ -79,9 +81,8 @@ class RuleParser:
         condition_values = []
         
         # Build SQL conditions from rule conditions
-        condition_builder = RuleConditionBuilder()
         for condition in rule_conditions:
-            sql_condition, value = condition_builder.build_condition(condition)
+            sql_condition, value = RuleParser.build_condition(condition)
             if sql_condition and value is not None:
                 sql_conditions.append(sql_condition)
                 condition_values.append(value)
