@@ -1,32 +1,38 @@
 import json
-from FileHandler.file_handler import FileHandler
+import os
+from typing import Any
 
-class JSONFileHandler(FileHandler):
-    def __init__(self, file_path):
-        self.file_path = file_path
+from FileHandler.file_handler import FileReader
+
+
+class JSONFileHandler(FileReader):
+    """Handler for JSON files implementing both read and write operations."""
     
-    def read(self):
+    def __init__(self, file_path: str):
+        """
+        Initialize the JSON file handler.
+        
+        Args:
+            file_path: Path to the JSON file
+        """
+        self._file_path = file_path
+    
+    def read(self) -> Any:
+        """
+        Read and parse JSON data from the file.
+        
+        Returns:
+            Parsed JSON data
+            
+        Raises:
+            FileNotFoundError: If the file does not exist
+            json.JSONDecodeError: If the file contains invalid JSON
+        """
+        if not os.path.exists(self._file_path):
+            raise FileNotFoundError(f"File not found: {self._file_path}")
+            
         try:
-            with open(self.file_path, 'r') as file:
+            with open(self._file_path, 'r') as file:
                 return json.load(file)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"File not found: {self.file_path}")
-        except json.JSONDecodeError:
-            raise json.JSONDecodeError(f"Invalid JSON format in file: {self.file_path}", '', 0)
-
-
-if __name__ == "__main__":
-    try:
-        handler = JSONFileHandler("test_data.json")
-        
-        data = handler.read()
-        
-        print("\nSuccessfully read JSON data:")
-        print(f"Name: {data['name']}")
-        print(f"Age: {data['age']}")
-        print(f"Email: {data['email']}")
-        print(f"City: {data['address']['city']}")
-        print(f"Phone numbers: {', '.join(data['phone_numbers'])}")
-        
-    except Exception as e:
-        print(f"Error: {e}")
+        except json.JSONDecodeError as e:
+            raise json.JSONDecodeError(f"Invalid JSON format in file: {self._file_path}", e.doc, e.pos)
