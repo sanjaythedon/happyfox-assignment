@@ -91,7 +91,7 @@ class GmailService(EmailService):
         if not self.service:
             raise ValueError("Failed to authenticate with Gmail API")
     
-    def fetch_emails(self, max_results: int = 10, query: str = ""):
+    def fetch_emails(self, max_results: int, query: str = ""):
         """
         Fetch emails from Gmail.
         

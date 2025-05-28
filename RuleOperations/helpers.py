@@ -27,13 +27,13 @@ class RuleParser:
         
         # Handle different predicates for string values
         if predicate == 'contains':
-            return f"\"{field_name}\" LIKE ?", f"%{value}%"
+            return f"lower(\"{field_name}\") LIKE ?", f"%{value.lower()}%"
         elif predicate == 'does not contain':
-            return f"\"{field_name}\" NOT LIKE ?", f"%{value}%"
+            return f"lower(\"{field_name}\") NOT LIKE ?", f"%{value.lower()}%"
         elif predicate == 'equals':
-            return f"\"{field_name}\" = ?", value
+            return f"lower(\"{field_name}\") = ?", value.lower()
         elif predicate == 'does not equal':
-            return f"\"{field_name}\" != ?", value
+            return f"lower(\"{field_name}\") != ?", value.lower()
         # Handle datetime predicates
         elif predicate in ['is less than', 'is greater than'] and field_name == 'Date Received':
             try:

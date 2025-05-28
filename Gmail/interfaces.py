@@ -15,7 +15,7 @@ class EmailService(ABC):
     """Interface for email service operations."""
     
     @abstractmethod
-    def fetch_emails(self, max_results: int = 10, query: str = "") -> List[Dict[str, Any]]:
+    def fetch_emails(self, max_results: int, query: str = "") -> List[Dict[str, Any]]:
         """
         Fetch emails from the service.
         """

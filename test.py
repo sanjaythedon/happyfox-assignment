@@ -15,6 +15,8 @@ class TestEmailRuleOperations(unittest.TestCase):
             token_file=os.getenv('TEST_GMAIL_TOKEN_FILE')
         )
         self.gmail = GmailService(self.gmail_authenticator)
+
+        self.max_results = 10
         db_path = 'test_emails.db'
         connection_manager = SQLiteConnection(db_path)
         table_manager = SQLiteTableManager(connection_manager)
@@ -24,12 +26,13 @@ class TestEmailRuleOperations(unittest.TestCase):
             table_manager=table_manager,
             data_manager=data_manager
         )
+
         self.file_handler = JSONFileHandler('test_rules.json')
         self.rule_operations = RuleOperations(self.gmail, self.db, self.file_handler)
     
     def test_fetch_and_store_emails(self):
         """Test fetching emails from Gmail and storing them in the database"""
-        result = self.rule_operations.fetch_and_store_emails()
+        result = self.rule_operations.fetch_and_store_emails(self.max_results)
         self.assertTrue(result)
         
         emails = self.db.read("emails")
@@ -55,7 +58,7 @@ class TestEmailRuleOperations(unittest.TestCase):
         }
         self.file_handler.write([test_rule])
         
-        self.rule_operations.fetch_and_store_emails()
+        self.rule_operations.fetch_and_store_emails(self.max_results)
         success_count = self.rule_operations.run_operations()
         
         self.assertGreater(success_count, 0)
@@ -82,7 +85,7 @@ class TestEmailRuleOperations(unittest.TestCase):
         }
         self.file_handler.write([test_rule])
         
-        self.rule_operations.fetch_and_store_emails()
+        self.rule_operations.fetch_and_store_emails(self.max_results)
         success_count = self.rule_operations.run_operations()
         
         self.assertEqual(success_count, 10)
@@ -115,7 +118,7 @@ class TestEmailRuleOperations(unittest.TestCase):
         ]
         self.file_handler.write(test_rules)
         
-        self.rule_operations.fetch_and_store_emails()
+        self.rule_operations.fetch_and_store_emails(self.max_results)
         success_count = self.rule_operations.run_operations()
         
         self.assertEqual(success_count, 2)

@@ -6,7 +6,7 @@
         {
           "field_name": "From",
           "predicate": "contains",
-          "value": "tenmiles.com"
+          "value": "shanjairajan"
         },
         {
           "field_name": "Subject",
@@ -26,7 +26,164 @@
         },
         {
           "action": "Move message",
-          "destination": "Inbox"
+          "destination": "Important"
+        }
+      ]
+    },
+    {
+      "rule_name": "Rule 2",
+      "rule_collection_predicate": "any",
+      "rules": [
+        {
+            "field_name": "Subject",
+            "predicate": "contains",
+            "value": "Interview"
+        },
+        {
+            "field_name": "From",
+            "predicate": "contains",
+            "value": "Interview"
+        },
+        {
+            "field_name": "Subject",
+            "predicate": "contains",
+            "value": "job"
+        },
+        {
+            "field_name": "From",
+            "predicate": "contains",
+            "value": "job"
+        }
+      ],
+      "operations": [
+        {
+            "action": "Move message",
+            "destination": "Inbox"
+        }
+      ]
+    },
+    {
+      "rule_name": "Rule 3",
+      "rule_collection_predicate": "any",
+      "rules": [
+        {
+            "field_name": "From",
+            "predicate": "contains",
+            "value": "zomato"
+        },
+        {
+            "field_name": "Subject",
+            "predicate": "contains",
+            "value": "zomato"
+        }
+      ],
+      "operations": [
+        {
+            "action": "Mark as Read"
+        }
+      ]
+    },
+    {
+      "rule_name": "Rule 4",
+      "rule_collection_predicate": "any",
+      "rules": [
+        {
+            "field_name": "From",
+            "predicate": "contains",
+            "value": "university"
+        },
+        {
+            "field_name": "Subject",
+            "predicate": "contains",
+            "value": "university"
+        },
+        {
+          "field_name": "Message",
+          "predicate": "contains",
+          "value": "university"
+        },
+        {
+          "field_name": "From",
+          "predicate": "contains",
+          "value": "mba"
+      },
+      {
+          "field_name": "Subject",
+          "predicate": "contains",
+          "value": "mba"
+      },
+      {
+        "field_name": "Message",
+        "predicate": "contains",
+        "value": "mba"
+      }
+      ],
+      "operations": [
+        {
+            "action": "Mark as Read"
+        },
+        {
+          "action": "Move message",
+          "destination": "Spam"
+        }
+      ]
+    },
+    {
+      "rule_name": "Rule 5",
+      "rule_collection_predicate": "all",
+      "rules": [
+        {
+            "field_name": "Subject",
+            "predicate": "contains",
+            "value": "Interview"
+        },
+        {
+          "field_name": "Message",
+          "predicate": "contains",
+          "value": "Interview"
+        },
+        {
+          "field_name":"Date Received",
+          "predicate": "is less than",
+          "value": "7",
+          "unit": "days"
+        }
+      ],
+      "operations": [
+        {
+          "action": "Move message",
+          "destination": "Important"
+        }
+      ]
+    },
+    {
+      "rule_name": "Rule 6",
+      "rule_collection_predicate": "all",
+      "rules": [
+        {
+            "field_name": "Subject",
+            "predicate": "does not contain",
+            "value": "Interview"
+        },
+        {
+          "field_name": "Message",
+          "predicate": "does not contain",
+          "value": "Interview"
+        },
+        {
+          "field_name": "Subject",
+          "predicate": "does not contain",
+          "value": "job"
+        },
+        {
+          "field_name": "Message",
+          "predicate": "does not contain",
+          "value": "job"
+        }
+      ],
+      "operations": [
+        {
+          "action": "Mark as Read"
         }
       ]
     }
