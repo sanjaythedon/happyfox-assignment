@@ -37,6 +37,7 @@ class RuleOperations:
             rules = self.file_handler.read()
             print(f"Successfully loaded {len(rules)} rule(s)")
             
+            success_count = 0
             for rule in rules:
                 rule_name = rule.get('rule_name', 'Unnamed Rule')
                 print(f"\nProcessing rule: '{rule_name}'")
@@ -70,14 +71,18 @@ class RuleOperations:
                             for j, operation in enumerate(email_operations):
                                 print(f"Applying operation {j+1}/{len(email_operations)}...")
                                 result = operation.apply(email_id, self.gmail)
-                                print(f"Operation {'succeeded' if result else 'failed'}")
+                                if result:
+                                    success_count += 1
+                                    print(f"Operation {'succeeded' if result else 'failed'}")
+                                else:
+                                    print(f"Operation {'succeeded' if result else 'failed'}")
                     else:
                         print(f"No operations to apply or no matching emails for rule '{rule_name}'")
                 else:
                     print(f"Warning: Could not create SQL condition for rule '{rule_name}'")
             
             print("\nRule processing completed successfully")
-            return rules
+            return success_count
         except Exception as e:
             print(f"Error in run_operations: {e}")
             import traceback

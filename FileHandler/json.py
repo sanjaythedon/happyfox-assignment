@@ -2,10 +2,10 @@ import json
 import os
 from typing import Any
 
-from FileHandler.interfaces import FileReader
+from FileHandler.interfaces import FileReader, FileWriter
 
 
-class JSONFileHandler(FileReader):
+class JSONFileHandler(FileReader, FileWriter):
     """Handler for JSON files implementing both read and write operations."""
     
     def __init__(self, file_path: str):
@@ -35,3 +35,23 @@ class JSONFileHandler(FileReader):
                 return json.load(file)
         except Exception as e:
             raise Exception(f"Error reading file: {self._file_path}")
+
+    def write(self, data: Any) -> bool:
+        """
+        Write JSON data to the file.
+        
+        Args:
+            data: Data to write to the file
+            
+        Returns:
+            True if the write operation was successful, False otherwise
+            
+        Raises:
+            Exception: If an error occurs while writing the file
+        """
+        try:
+            with open(self._file_path, 'w') as file:
+                json.dump(data, file, indent=4)
+            return True
+        except Exception as e:
+            raise Exception(f"Error writing file: {self._file_path}")
