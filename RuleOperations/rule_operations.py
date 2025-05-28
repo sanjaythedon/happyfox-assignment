@@ -65,15 +65,18 @@ class RuleOperations:
                                 
                             print(f"Processing operations for email {i+1}/{len(matching_emails)}: {email.get('Subject', 'No Subject')}")
                             
+                            is_success = False
                             for j, operation in enumerate(email_operations):
                                 print(f"Applying operation {j+1}/{len(email_operations)}...")
                                 result = operation.apply(email_id, self.gmail)
                                 if result:
-                                    rule_success_count += 1
+                                    is_success = True
                                     print("Operation succeeded")
                                 else:
                                     print("Operation failed")
 
+                            rule_success_count += 1 if is_success else 0
+                            
                         print(f"Successfully applied operations to {rule_success_count} emails for '{rule_name}'")
                         success_count += rule_success_count
                     else:
