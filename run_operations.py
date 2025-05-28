@@ -5,10 +5,9 @@ def main(rule_operations):
     Applies rules to the emails. 
     """
     
-    count = rule_operations.run_operations()
-    return count
+    rule_operations.run_operations()
 
 if __name__ == "__main__":
     print("Applying rules to emails...")
-    count = main(rule_operations)
+    main(rule_operations)
     print("Successfully applied operations for all rules")
