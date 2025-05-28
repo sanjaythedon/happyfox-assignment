@@ -87,10 +87,10 @@ This script will load emails from the database and apply the rules defined in yo
 
 You can customize the workflow by modifying these parameters:
 
-- **Number of emails**: Change the `MAX_EMAILS` value in your `.env` file
-- **Rules file**: Change the `RULES_FILE` value in your `.env` file to use a different rules file
+- **Number of emails**: Add the `MAX_EMAILS` value in your `.env` file to limit the number of emails fetched from Gmail ( default is 100 )
+- **Rules file**: Add the `RULES_FILE` value in your `.env` file to use a different rules file ( default is `rules.json` )
 - **Rule definitions**: Edit the `RULES_FILE` file to define different rules
-- **Database file**: Change the database filename in `.env` file `DATABASE_FILE` to use a different database
+- **Database file**: Add the database filename in `.env` file `DATABASE_FILE` to use a different database ( default is `app.db` )
 
 ## Testing
 
