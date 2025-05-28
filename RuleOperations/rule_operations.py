@@ -68,9 +68,12 @@ class RuleOperations:
                                 result = operation.apply(email_id, self.gmail)
                                 if result:
                                     success_count += 1
-                                    print(f"Operation {'succeeded' if result else 'failed'}")
+                                    print("Operation succeeded")
                                 else:
-                                    print(f"Operation {'succeeded' if result else 'failed'}")
+                                    print("Operation failed")
+
+                        print(f"Successfully applied operations to {success_count} emails for '{rule_name}'")
+                        success_count = 0
                     else:
                         print(f"No operations to apply or no matching emails for rule '{rule_name}'")
                 else:

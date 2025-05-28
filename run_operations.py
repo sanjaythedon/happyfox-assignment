@@ -11,4 +11,4 @@ def main(rule_operations):
 if __name__ == "__main__":
     print("Applying rules to emails...")
     count = main(rule_operations)
-    print(f"Successfully applied operations to {count} matching emails")
+    print(f"Successfully applied operations for all rules")
