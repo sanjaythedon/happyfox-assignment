@@ -147,23 +147,3 @@ class RuleOperations:
             print(f"Error in fetch_and_store_emails: {e}")
             print(f"Stack trace: {traceback.format_exc()}")
             return False
-    
-        
-if __name__ == "__main__":
-    gmail_authenticator = GmailAuthenticator(       
-        credentials_file=os.getenv('GMAIL_CREDENTIALS_FILE'),
-        token_file=os.getenv('GMAIL_TOKEN_FILE')
-    )
-    gmail = GmailService(gmail_authenticator)
-    
-    connection_manager = SQLiteConnection("app.db")
-    db = SQLiteDatabase(
-        connection_manager=connection_manager,
-        table_manager=SQLiteTableManager(connection_manager),
-        data_manager=SQLiteDataManager(connection_manager)
-    )
-    file_handler = JSONFileHandler('rules1.json')
-    
-    rule_operations = RuleOperations(gmail, db, file_handler)
-    # assignment.fetch_and_store_emails()
-    rule_operations.run_operations()

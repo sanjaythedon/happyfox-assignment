@@ -240,31 +240,3 @@ class GmailService(EmailService):
         except Exception as e:
             print(f"Error updating email: {e}")
             return False
-
-
-if __name__ == "__main__":
-    
-    try:
-        authenticator = GmailAuthenticator(
-            credentials_file=os.getenv('GMAIL_CREDENTIALS_FILE'),
-            token_file=os.getenv('GMAIL_TOKEN_FILE')
-        )
-        
-        gmail_service = GmailService(authenticator)
-        
-        emails = gmail_service.fetch_emails(max_results=5)
-        
-        if emails:
-            print("\nEmail Summary:")
-            for email in emails:
-                print(f"Subject: {email['Subject']}")
-                print(f"From: {email['From']}")
-                print(f"Date: {email['Date Received']}")
-                print("-" * 50)
-            
-            first_email_id = emails[0]['unique_id']
-            if gmail_service.update_email(first_email_id, mark_as_read=True):
-                print(f"Marked email '{emails[0]['Subject']}' as read")
-        
-    except Exception as e:
-        print(f"Error: {e}")
