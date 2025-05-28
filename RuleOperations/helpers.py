@@ -21,11 +21,9 @@ class RuleParser:
         value = condition.get('value')
         unit = condition.get('unit')
         
-        # Skip if any required field is missing
         if not all([field_name, predicate, value]):
             return None, None
         
-        # Handle different predicates for string values
         if predicate == 'contains':
             return f"lower(\"{field_name}\") LIKE ?", f"%{value.lower()}%"
         elif predicate == 'does not contain':
@@ -34,7 +32,6 @@ class RuleParser:
             return f"lower(\"{field_name}\") = ?", value.lower()
         elif predicate == 'does not equal':
             return f"lower(\"{field_name}\") != ?", value.lower()
-        # Handle datetime predicates
         elif predicate in ['is less than', 'is greater than'] and field_name == 'Date Received':
             try:
                 value_int = int(value)
@@ -42,19 +39,16 @@ class RuleParser:
                 
                 if unit == 'days':
                     if predicate == 'is less than':
-                        # Emails received less than X days ago
                         target_date = current_date - timedelta(days=value_int)
                         return f"\"{field_name}\" > ?", target_date.strftime('%Y-%m-%d %H:%M:%S')
-                    else:  # is greater than
-                        # Emails received more than X days ago
+                    else:
                         target_date = current_date - timedelta(days=value_int)
                         return f"\"{field_name}\" < ?", target_date.strftime('%Y-%m-%d %H:%M:%S')
                 elif unit == 'months':
-                    # Calculate months by approximating 30 days per month
                     if predicate == 'is less than':
                         target_date = current_date - timedelta(days=30 * value_int)
                         return f"\"{field_name}\" > ?", target_date.strftime('%Y-%m-%d %H:%M:%S')
-                    else:  # is greater than
+                    else:
                         target_date = current_date - timedelta(days=30 * value_int)
                         return f"\"{field_name}\" < ?", target_date.strftime('%Y-%m-%d %H:%M:%S')
             except (ValueError, TypeError) as e:
@@ -80,21 +74,18 @@ class RuleParser:
         sql_conditions = []
         condition_values = []
         
-        # Build SQL conditions from rule conditions
         for condition in rule_conditions:
             sql_condition, value = RuleParser.build_condition(condition)
             if sql_condition and value is not None:
                 sql_conditions.append(sql_condition)
                 condition_values.append(value)
         
-        # If no valid conditions, return empty query
         if not sql_conditions:
             return "", []
         
-        # Combine conditions based on rule_collection_predicate
         if rule_collection_predicate.lower() == 'all':
             condition_str = " AND ".join(sql_conditions)
-        else:  # 'any'
+        else:
             condition_str = " OR ".join(sql_conditions)
         
         return condition_str, condition_values

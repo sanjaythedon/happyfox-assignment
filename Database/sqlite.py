@@ -27,10 +27,6 @@ class SQLiteConnection:
             self.connection = None
             self.cursor = None
     
-    def get_connection(self):
-        """Get the current connection."""
-        return self.connection
-    
     def get_cursor(self):
         """Get the current cursor."""
         return self.cursor
