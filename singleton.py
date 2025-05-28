@@ -3,7 +3,9 @@ from Gmail.gmail import GmailService, GmailAuthenticator
 from Database.sqlite import SQLiteDatabase, SQLiteConnection, SQLiteTableManager, SQLiteDataManager
 from FileHandler import JSONFileHandler
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 gmail_authenticator = GmailAuthenticator(
     credentials_file=os.getenv('GMAIL_CREDENTIALS_FILE'),

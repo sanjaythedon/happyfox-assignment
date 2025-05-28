@@ -1,6 +1,8 @@
 from singleton import rule_operations
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def main(rule_operations):
     """
