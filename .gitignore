@@ -7,3 +7,5 @@ token.pickle
 *.db
 test_data.json
 rules1.json
+send_test_emails.py
+test_token.pickle
