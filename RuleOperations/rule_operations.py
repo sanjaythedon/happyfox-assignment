@@ -49,12 +49,14 @@ class RuleOperations:
                     print(f"Found {len(matching_emails)} emails matching rule '{rule_name}'")
                     
                     operations = rule.get('operations', [])
+
                     if operations and matching_emails:
                         print(f"Applying {len(operations)} operations to {len(matching_emails)} emails")
                         
                         print("Bundling email operations...")
                         email_operations = EmailOperationsBundler.bundle_email_operations(operations)
                         
+                        rule_success_count = 0
                         for i, email in enumerate(matching_emails):
                             email_id = email.get('unique_id')
                             if not email_id:
@@ -67,13 +69,13 @@ class RuleOperations:
                                 print(f"Applying operation {j+1}/{len(email_operations)}...")
                                 result = operation.apply(email_id, self.gmail)
                                 if result:
-                                    success_count += 1
+                                    rule_success_count += 1
                                     print("Operation succeeded")
                                 else:
                                     print("Operation failed")
 
-                        print(f"Successfully applied operations to {success_count} emails for '{rule_name}'")
-                        success_count = 0
+                        print(f"Successfully applied operations to {rule_success_count} emails for '{rule_name}'")
+                        success_count += rule_success_count
                     else:
                         print(f"No operations to apply or no matching emails for rule '{rule_name}'")
                 else:
