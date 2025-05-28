@@ -14,20 +14,6 @@ A Python module for Gmail access to authenticate, fetch, and update emails in Gm
 - Token persistence for future sessions
 - Error handling for authentication failures
 
-#### Usage
-
-```python
-from Gmail.gmail import Gmail
-
-# Initialize the Gmail client
-gmail = Gmail()
-# OR specify paths directly
-# gmail = Gmail(credentials_file='path/to/credentials.json', token_file='path/to/token.pickle')
-
-# The first time you run this, it will open a browser window for authentication
-# After authenticating, the token will be saved for future use
-```
-
 ### 2. SQLite Database Module
 
 A lightweight database module that provides a simple interface for SQLite operations.
@@ -39,28 +25,13 @@ A lightweight database module that provides a simple interface for SQLite operat
 - Read data with optional column selection and conditions
 - Update data based on conditions
 
-#### Usage
-
-```python
-from Database.sqlite import Database
-
-db = Database("my_database.db")
-
-db.create_table("emails", {
-    "id": "INTEGER PRIMARY KEY",
-    "subject": "TEXT",
-    "sender": "TEXT",
-    "date": "TEXT"
-})
-
-db.insert("emails", {"subject": "Hello", "sender": "user@example.com", "date": "2025-05-28"})
-
-results = db.read("emails", columns=["subject", "sender"], conditions={"date": "2025-05-28"})
-```
-
 ### 3. Rule Operations Module
 
 A module for defining and applying rules to process emails based on specific conditions.
+
+### 4. File Handler Module
+
+A module for managing file operations, including reading from and writing to files, handling attachments, and processing file-based data.
 
 ## Setup
 
