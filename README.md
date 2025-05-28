@@ -44,10 +44,8 @@ A lightweight database module that provides a simple interface for SQLite operat
 ```python
 from Database.sqlite import Database
 
-# Initialize the database
 db = Database("my_database.db")
 
-# Create a table
 db.create_table("emails", {
     "id": "INTEGER PRIMARY KEY",
     "subject": "TEXT",
@@ -55,10 +53,8 @@ db.create_table("emails", {
     "date": "TEXT"
 })
 
-# Insert data
 db.insert("emails", {"subject": "Hello", "sender": "user@example.com", "date": "2025-05-28"})
 
-# Read data
 results = db.read("emails", columns=["subject", "sender"], conditions={"date": "2025-05-28"})
 ```
 
@@ -95,81 +91,26 @@ A module for defining and applying rules to process emails based on specific con
    TEST_EMAIL_SENDER=your_test_email@example.com
    ```
 
-## Running the Application
+## Running Functions Separately
 
-The application can be run in different ways depending on your needs:
-
-### Running the Complete Workflow
-
-To run the entire workflow (fetch emails and apply rules):
-
-```bash
-python main.py
-```
-
-This will execute both the `fetch_and_store_emails` and `run_operations` functions in sequence.
-
-### Running Functions Separately
-
-You can modify main.py to run specific functions separately:
+You can also run specific functions separately using dedicated scripts:
 
 1. **Fetch and Store Emails Only**:
 
-```python
-# In main.py
-if __name__ == "__main__":
-    # Initialize components
-    gmail_authenticator = GmailAuthenticator(
-        credentials_file=os.getenv('GMAIL_CREDENTIALS_FILE'),
-        token_file=os.getenv('GMAIL_TOKEN_FILE')
-    )
-    gmail = GmailService(gmail_authenticator)
-    
-    connection_manager = SQLiteConnection(os.getenv('DATABASE_FILE', 'app.db'))
-    db = SQLiteDatabase(
-        connection_manager=connection_manager,
-        table_manager=SQLiteTableManager(connection_manager),
-        data_manager=SQLiteDataManager(connection_manager)
-    )
-    file_handler = JSONFileHandler(os.getenv('RULES_FILE', 'rules.json'))
-    
-    rule_operations = RuleOperations(gmail, db, file_handler)
-    
-    # Only fetch and store emails
-    print("Fetching and storing emails from Gmail...")
-    max_results = os.getenv('MAX_EMAILS', 100)
-    rule_operations.fetch_and_store_emails(max_results=max_results)
-    print("Successfully fetched and stored emails in the database")
+```bash
+python fetch_store_emails.py
 ```
+
+This script will connect to Gmail, fetch emails according to your settings, and store them in the database.
 
 2. **Apply Rules Only** (assumes emails are already in the database):
 
-```python
-# In main.py
-if __name__ == "__main__":
-    # Initialize components
-    gmail_authenticator = GmailAuthenticator(
-        credentials_file=os.getenv('GMAIL_CREDENTIALS_FILE'),
-        token_file=os.getenv('GMAIL_TOKEN_FILE')
-    )
-    gmail = GmailService(gmail_authenticator)
-    
-    connection_manager = SQLiteConnection(os.getenv('DATABASE_FILE', 'app.db'))
-    db = SQLiteDatabase(
-        connection_manager=connection_manager,
-        table_manager=SQLiteTableManager(connection_manager),
-        data_manager=SQLiteDataManager(connection_manager)
-    )
-    rules_file = os.getenv('RULES_FILE', 'rules.json')
-    file_handler = JSONFileHandler(rules_file)
-    
-    rule_operations = RuleOperations(gmail, db, file_handler)
-    
-    # Only apply rules to existing emails
-    print("Applying rules to emails...")
-    rules = rule_operations.run_operations()
-    print(f"Successfully applied {len(rules)} rule(s) to matching emails")
+```bash
+python run_operations.py
 ```
+
+This script will load emails from the database and apply the rules defined in your rules file.
+
 
 ### Customizing the Workflow
 
