@@ -128,6 +128,8 @@ class TestEmailRuleOperations(unittest.TestCase):
             os.remove("test_emails.db")
         if os.path.exists("test_rules.json"):
             os.remove("test_rules.json")
+        if os.path.exists("test_token.pickle"):
+            os.remove("test_token.pickle")
         
 
 if __name__ == "__main__":
