@@ -1,5 +1,6 @@
 venv/
 credentials.json
+test_credentials.json
 .env
 __pycache__
 token.pickle
