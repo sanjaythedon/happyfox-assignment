@@ -7,28 +7,29 @@ from FileHandler.json import JSONFileHandler
 from RuleOperations.rule_operations import RuleOperations
 
 class TestEmailRuleOperations(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         load_dotenv()
         
-        self.gmail_authenticator = GmailAuthenticator(
+        cls.gmail_authenticator = GmailAuthenticator(
             credentials_file=os.getenv('TEST_GMAIL_CREDENTIALS_FILE'),
             token_file=os.getenv('TEST_GMAIL_TOKEN_FILE')
         )
-        self.gmail = GmailService(self.gmail_authenticator)
+        cls.gmail = GmailService(cls.gmail_authenticator)
 
-        self.max_results = 10
+        cls.max_results = 10
         db_path = 'test_emails.db'
         connection_manager = SQLiteConnection(db_path)
         table_manager = SQLiteTableManager(connection_manager)
         data_manager = SQLiteDataManager(connection_manager)
-        self.db = SQLiteDatabase(
+        cls.db = SQLiteDatabase(
             connection_manager=connection_manager,
             table_manager=table_manager,
             data_manager=data_manager
         )
 
-        self.file_handler = JSONFileHandler('test_rules.json')
-        self.rule_operations = RuleOperations(self.gmail, self.db, self.file_handler)
+        cls.file_handler = JSONFileHandler('test_rules.json')
+        cls.rule_operations = RuleOperations(cls.gmail, cls.db, cls.file_handler)
     
     def test_fetch_and_store_emails(self):
         """Test fetching emails from Gmail and storing them in the database"""
@@ -72,8 +73,8 @@ class TestEmailRuleOperations(unittest.TestCase):
                 {
                     "field_name": "Date Received",
                     "predicate": "is less than",
-                    "value": "7",
-                    "unit": "days"
+                    "value": "1",
+                    "unit": "months"
                 }
             ],
             "operations": [
@@ -123,7 +124,8 @@ class TestEmailRuleOperations(unittest.TestCase):
         
         self.assertEqual(success_count, 2)
     
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         if os.path.exists("test_emails.db"):
             os.remove("test_emails.db")
         if os.path.exists("test_rules.json"):
